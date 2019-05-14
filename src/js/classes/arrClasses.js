@@ -5,8 +5,8 @@ import Magician from './Magician';
 import Undead from './Undead';
 import Vampire from './Vampire';
 
-const arrClasses = [Bowman, Swordsman, Magician, Daemon, Undead, Vampire];
+export const arrClasses = [Bowman, Swordsman, Magician, Daemon, Undead, Vampire];
 
-export const userTeam = arrClasses.slice(0, 3);
+export const userTeam = [Bowman, Swordsman, Magician];
 
-export const enemyTeam = arrClasses.slice(3, 6);
+export const enemyTeam = [Daemon, Undead, Vampire];
