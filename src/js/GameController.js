@@ -1,9 +1,13 @@
 import themes from './themes';
+import GamePlay from './GamePlay';
 import PositionedCharacter from './PositionedCharacter';
 import { generateTeam } from './generators';
 // import Team from './Team';
 import { userTeam, enemyTeam } from './classes/arrClasses';
 import heroInfo from './classes/shortHeroInfo';
+
+const userTypes = ['swordsman', 'bowman', 'magician'];
+const enemyTypes = ['vampire', 'undead', 'daemon'];
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -20,6 +24,7 @@ export default class GameController {
     this.initTeams();
     this.gamePlay.redrawPositions(this.positions);
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+    this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
   }
 
   initTeams() {
@@ -56,16 +61,28 @@ export default class GameController {
     this.positions = userPositionedTeam.concat(enemyPositionedTeam);
   }
 
-
   onCellClick(index) {
     // TODO: react to click
+    let selected;
+    const selectedHero = this.positions.filter(i => i.position === index);
+    if (selectedHero.length && userTypes.includes(selectedHero[0].character.type)){
+      if (this.selected) {
+        console.log(this.selected);
+        this.gamePlay.deselectCell(this.selected.position);
+      }
+      this.gamePlay.selectCell(index);
+      this.selected = selectedHero[0];
+      //console.log(selectedHero[0].character);
+    } else {
+      GamePlay.showError('Выберите своего персонажа');
+    } 
   }
 
   onCellEnter(index) {
     // TODO: react to mouse enter
-    const pointedHero = this.positions.filter(i => i.position === index);
-    console.log(pointedHero[0].character);
-    const shortInfo = heroInfo(pointedHero[0].character);
+    const selectedHero = this.positions.filter(i => i.position === index);
+    //console.log(selectedHero[0].character);
+    const shortInfo = heroInfo(selectedHero[0].character);
     for (const i of this.positions) {
       if (i.position === index) {
         this.gamePlay.showCellTooltip(shortInfo, index);
