@@ -22,3 +22,15 @@ export function calcHealthLevel(health) {
 
   return 'high';
 }
+
+export function unique(arg) {
+  const result = [];
+  const obj = {};
+  for (var i = 0; i < arg.length; i++) {
+    obj[arg[i]] = arg[i];
+  }
+  for (var i in obj) {
+    result.push(obj[i]);
+  }
+  return result;
+}

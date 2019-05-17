@@ -28,9 +28,10 @@ export default class Team {
   constructor(level, count) {
     this.level = level;
     this.count = count;
+    this.positions = allPositions;
   }
 
-  getTeamPosition() {
+  getTeamPositions() {
     user.forEach((character) => {
       const positionedCharacter = new PositionedCharacter(character, getUserPos());
       userPositionedTeam.push(positionedCharacter);
@@ -40,6 +41,7 @@ export default class Team {
       enemyPositionedTeam.push(positionedCharacter);
     });
 
-    allPositions = [...userPositionedTeam, ...enemyPositionedTeam];
+    allPositions = userPositionedTeam.concat(enemyPositionedTeam);
+    return allPositions;
   }
 }
