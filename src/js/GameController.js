@@ -6,11 +6,12 @@ import { generateTeam } from './generators';
 import { userTeam, enemyTeam } from './classes/arrClasses';
 import heroInfo from './classes/shortHeroInfo';
 import cursors from './cursors';
-import { allowedMove } from './chooseIndex';
+import { allowedMove, allowedAttack } from './chooseIndex';
 import { unique } from './utils';
 
 const userTypes = ['swordsman', 'bowman', 'magician'];
 const enemyTypes = ['vampire', 'undead', 'daemon'];
+
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -30,6 +31,7 @@ export default class GameController {
     this.gamePlay.redrawPositions(this.positions);
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
     this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
+    this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
   }
 
   initTeams() {
@@ -69,12 +71,15 @@ export default class GameController {
   onCellClick(index) {
     // TODO: react to click
     const selectedHero = this.positions.filter(i => i.position === index);
-    if (selectedHero.length && userTypes.includes(selectedHero[0].character.type)) {
+    if (selectedHero[0]!== undefined && userTypes.includes(selectedHero[0].character.type)) {
       if (this.selected) {
         this.gamePlay.deselectCell(this.selected.position);
       }
       this.gamePlay.selectCell(index);
       this.selected = selectedHero[0];
+      this.attackIndex = allowedAttack(this.selected.position, this.selected.character.distanceAttack)
+      this.moveIndex = allowedMove(this.selected.position, this.selected.character.distance)
+      console.log(this.attackIndex, this.moveIndex);
     } else {
       GamePlay.showError('Выберите своего персонажа');
     }
@@ -83,11 +88,19 @@ export default class GameController {
   onCellEnter(index) {
     // TODO: react to mouse enter
     const selectedHero = this.positions.filter(i => i.position === index);
-    // console.log(selectedHero[0].character);
+    if (this.selected && this.moveIndex.includes(index) && !selectedHero.length) {
+      this.gamePlay.setCursor(cursors.pointer);
+      this.gamePlay.selectCell(index, 'green');
+    } else if (this.selected && this.attackIndex.includes(index) && selectedHero.length && enemyTypes.includes(selectedHero[0].character.type)) {
+      this.gamePlay.setCursor(cursors.crosshair);
+      this.gamePlay.selectCell(index, 'red');
+    } 
+  
+    if (selectedHero[0] !== undefined) {
     const shortInfo = heroInfo(selectedHero[0].character);
-    this.selected = selectedHero[0];
+    
     for (const i of this.positions) {
-      if (i.position === index && userTypes.includes(selectedHero[0].character.type)) {
+        if (i.position === index && userTypes.includes(selectedHero[0].character.type)) {
         this.gamePlay.setCursor(cursors.pointer);
         this.gamePlay.showCellTooltip(shortInfo, index);
       } else if (i.position === index && enemyTypes.includes(selectedHero[0].character.type)) {
@@ -96,9 +109,11 @@ export default class GameController {
       }
     }
   }
+  }
 
   onCellLeave(index) {
     // TODO: react to mouse leave
+    this.gamePlay.deselectCell(index);
     this.gamePlay.setCursor(cursors.auto);
     this.gamePlay.hideCellTooltip(index);
   }

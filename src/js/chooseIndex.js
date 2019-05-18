@@ -37,14 +37,14 @@ export function allowedAttack(position, distance) {
   if (right > boardSize - 1) right = boardSize - 1;
   let bottom = indexStr + distance;
   if (bottom > boardSize - 1) bottom = boardSize - 1;
-  //console.log(top, right, bottom, left);
+  // console.log(top, right, bottom, left);
 
   for (let i = top; i <= bottom; i += 1) {
     for (let j = left; j <= right; j += 1) {
       allowedAttackIndex.push(allBoard[i][j]);
     }
   }
-  return allowedAttackIndex;
+  return allowedAttackIndex.filter(item => item !== position);
 }
 
 export function allowedMove(position, distance) {
