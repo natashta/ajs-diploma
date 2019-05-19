@@ -7,7 +7,7 @@ import { userTeam, enemyTeam } from './classes/arrClasses';
 import heroInfo from './classes/shortHeroInfo';
 import cursors from './cursors';
 import { allowedMove, allowedAttack } from './chooseIndex';
-import { unique } from './utils';
+//import { unique } from './utils';
 
 const userTypes = ['swordsman', 'bowman', 'magician'];
 const enemyTypes = ['vampire', 'undead', 'daemon'];
@@ -19,6 +19,8 @@ export default class GameController {
     this.stateService = stateService;
     this.turn = 'user';
     this.selected = '';
+    this.userPositionedTeam = [];
+    this.enemyPositionedTeam = [];
   }
 
   init() {
@@ -53,19 +55,16 @@ export default class GameController {
     const user = generateTeam(userTeam, 1, 2);
     const enemy = generateTeam(enemyTeam, 1, 2);
 
-    const userPositionedTeam = [];
-    const enemyPositionedTeam = [];
-
     user.forEach((character) => {
       const positionedCharacter = new PositionedCharacter(character, getUserPos());
-      userPositionedTeam.push(positionedCharacter);
+      this.userPositionedTeam.push(positionedCharacter);
     });
     enemy.forEach((character) => {
       const positionedCharacter = new PositionedCharacter(character, getEnemyPos());
-      enemyPositionedTeam.push(positionedCharacter);
+      this.enemyPositionedTeam.push(positionedCharacter);
     });
 
-    this.positions = userPositionedTeam.concat(enemyPositionedTeam);
+    this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
   }
 
   onCellClick(index) {
@@ -79,23 +78,24 @@ export default class GameController {
       this.selected = selectedHero[0];
       this.attackIndex = allowedAttack(this.selected.position, this.selected.character.distanceAttack)
       this.moveIndex = allowedMove(this.selected.position, this.selected.character.distance)
-      console.log(this.attackIndex, this.moveIndex);
-    } else {
+      //console.log(this.attackIndex, this.moveIndex);
+    } else if (this.selected) {
+      if (this.moveIndex.includes(index)) {
+        this.gamePlay.deselectCell(this.selected.position);
+        this.selected.position = index;
+        this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
+        this.gamePlay.redrawPositions(this.positions);
+        this.turn = 'enemy';
+        this.gamePlay.selectCell(index);
+      } else {
       GamePlay.showError('Выберите своего персонажа');
+      }
     }
   }
 
   onCellEnter(index) {
     // TODO: react to mouse enter
     const selectedHero = this.positions.filter(i => i.position === index);
-    if (this.selected && this.moveIndex.includes(index) && !selectedHero.length) {
-      this.gamePlay.setCursor(cursors.pointer);
-      this.gamePlay.selectCell(index, 'green');
-    } else if (this.selected && this.attackIndex.includes(index) && selectedHero.length && enemyTypes.includes(selectedHero[0].character.type)) {
-      this.gamePlay.setCursor(cursors.crosshair);
-      this.gamePlay.selectCell(index, 'red');
-    } 
-  
     if (selectedHero[0] !== undefined) {
     const shortInfo = heroInfo(selectedHero[0].character);
     
@@ -109,11 +109,20 @@ export default class GameController {
       }
     }
   }
+    if (this.selected && this.moveIndex.includes(index) && !selectedHero.length) {
+      this.gamePlay.setCursor(cursors.pointer);
+      this.gamePlay.selectCell(index, 'green');
+    } else if (this.selected && this.attackIndex.includes(index) && selectedHero.length && enemyTypes.includes(selectedHero[0].character.type)) {
+      this.gamePlay.setCursor(cursors.crosshair);
+      this.gamePlay.selectCell(index, 'red');
+    } 
   }
 
   onCellLeave(index) {
     // TODO: react to mouse leave
-    this.gamePlay.deselectCell(index);
+    if (this.selected.position != index){
+      this.gamePlay.deselectCell(index)
+    }
     this.gamePlay.setCursor(cursors.auto);
     this.gamePlay.hideCellTooltip(index);
   }

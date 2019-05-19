@@ -9,6 +9,7 @@ test('allowed attacks', () => {
   const received = allowedAttack(position, distance);
   expect(received).toEqual(expected);
 });
+
 test('allowed attacks2', () => {
   const distance = 2;
   const position = 6;
@@ -30,9 +31,9 @@ test('allowed moves', () => {
 
 test('allowed moves2', () => {
   const distance = 2;
-  const position = 10;
+  const position = 56;
 
-  const expected = [1, 2, 3, 8, 9, 11, 12, 17, 18, 19, 24, 26, 28];
+  const expected = [40, 42, 48, 49, 57, 58];
   const arr = allowedMove(position, distance);
   const received = unique(arr);
   expect(received).toEqual(expected);
