@@ -7,7 +7,6 @@ import { userTeam, enemyTeam } from './classes/arrClasses';
 import heroInfo from './classes/shortHeroInfo';
 import cursors from './cursors';
 import { allowedMove, allowedAttack } from './chooseIndex';
-//import { unique } from './utils';
 
 const userTypes = ['swordsman', 'bowman', 'magician'];
 const enemyTypes = ['vampire', 'undead', 'daemon'];
@@ -67,6 +66,68 @@ export default class GameController {
     this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
   }
 
+  attack(index, attacker, target) {
+    const damage = Math.max(attacker.attack - target.defence, attacker.attack * 0.1);
+    if (this.turn === undefined) {
+        throw new TypeError('Что-то пошло не так');
+      }
+     
+    if (target.health - damage > 0) {
+        target.health -= damage; 
+        this.turn = 'enemy';
+        console.log('attack!');
+      } 
+    
+      else if (target.health - damage <= 0) {
+        console.log('killed');
+        this.enemyPositionedTeam = this.enemyPositionedTeam.filter(item => item.position !== index);
+        this.userPositionedTeam = this.userPositionedTeam.filter(item => item.position !== index);
+        this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
+        this.gamePlay.redrawPositions(this.positions);
+    }
+    this.gamePlay.showDamage(index, damage).then(() => {
+    this.gamePlay.redrawPositions(this.positions)})
+}
+
+//если очередь компьютера, он атакует, если юзер в пределах аттаки или случайно ходит в позвоенных пределах.
+
+enemyAction() {
+  if (this.turn !== 'enemy') {
+    console.log('Ошибка с очередью');
+    return;
+}
+
+  for (const el of this.enemyPositionedTeam) {
+    this.enemyAttackIndex = allowedAttack(el.position, el.character.distanceAttack)
+    this.enemyMoveIndex = allowedMove(el.position, el.character.distance)
+    //если в массиве атаки есть индекс команды игрока, то напасть
+    for (const userPos of this.userPositionedTeam) {
+    const attackCellKey = this.enemyAttackIndex.indexOf(userPos.position);
+      if(attackCellKey !== -1) {
+        const attackCell = this.enemyAttackIndex[attackCellKey];
+        this.attack(attackCell, el.character, userPos.character);
+        this.turn = 'user';
+      }
+    }
+  }
+    const getEnemyChar = () => {
+      const random = Math.floor(Math.random() * this.enemyPositionedTeam.length);
+      const result = this.enemyPositionedTeam[random];
+      return result;
+    };
+    this.newPos = allowedMove(getEnemyChar().position, getEnemyChar().character.distance);
+    const getEnemyPos = () => {
+      const random = Math.floor(Math.random() * this.newPos.length);
+      const result = this.newPos[random];
+      return result;
+    };
+    getEnemyChar().position = getEnemyPos();
+    this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
+    this.gamePlay.redrawPositions(this.positions);
+    this.turn = 'user';
+    //console.log(getEnemyChar().position);
+}
+
   onCellClick(index) {
     // TODO: react to click
     const selectedHero = this.positions.filter(i => i.position === index);
@@ -78,17 +139,27 @@ export default class GameController {
       this.selected = selectedHero[0];
       this.attackIndex = allowedAttack(this.selected.position, this.selected.character.distanceAttack)
       this.moveIndex = allowedMove(this.selected.position, this.selected.character.distance)
-      //console.log(this.attackIndex, this.moveIndex);
+
     } else if (this.selected) {
-      if (this.moveIndex.includes(index)) {
+      if (this.attackIndex.includes(index) && selectedHero.length && enemyTypes.includes(selectedHero[0].character.type)) {
+        const target = this.enemyPositionedTeam.filter(item => item.position === index);
+        this.attack(index, this.selected.character, target[0].character);
+        this.turn = 'enemy';
+        this.enemyAction();
+      } else if (this.moveIndex.includes(index)) {
+        if (this.turn !== 'user') {
+          console.log('Ошибка с очередью');
+          this.enemyAction();
+        }
         this.gamePlay.deselectCell(this.selected.position);
         this.selected.position = index;
         this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
         this.gamePlay.redrawPositions(this.positions);
-        this.turn = 'enemy';
         this.gamePlay.selectCell(index);
+        this.turn = 'enemy';
+        this.enemyAction();
       } else {
-      GamePlay.showError('Выберите своего персонажа');
+      GamePlay.showError('Недопустимое действие');
       }
     }
   }
