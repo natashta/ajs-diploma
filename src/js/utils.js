@@ -3,7 +3,7 @@ export function calcTileType(index, boardSize) {
   if (index === 0) return 'top-left';
   if (index === boardSize - 1) return 'top-right';
   if (index === boardSize * (boardSize - 1)) return 'bottom-left';
-  if (index === Math.pow(boardSize, 2) - 1) return 'bottom-right';
+  if (index === (boardSize ** 2) - 1) return 'bottom-right';
   if (index < (boardSize - 1)) return 'top';
   if (index % boardSize === 0) return 'left';
   if (index % boardSize === boardSize - 1) return 'right';
@@ -26,10 +26,10 @@ export function calcHealthLevel(health) {
 export function unique(arg) {
   const result = [];
   const obj = {};
-  for (var i = 0; i < arg.length; i++) {
+  for (let i = 0; i < arg.length; i += 1) {
     obj[arg[i]] = arg[i];
   }
-  for (var i in obj) {
+  for (let i in obj) {
     result.push(obj[i]);
   }
   return result;
