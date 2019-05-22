@@ -1,7 +1,7 @@
 import themes from './themes';
 import GamePlay from './GamePlay';
 import PositionedCharacter from './PositionedCharacter';
-import { generateTeam } from './generators';
+import { generateTeam, characterGenerator } from './generators';
 // import Team from './Team';
 import { userTeam, enemyTeam } from './classes/arrClasses';
 import heroInfo from './classes/shortHeroInfo';
@@ -14,6 +14,16 @@ const userTypes = ['swordsman', 'bowman', 'magician'];
 const enemyTypes = ['vampire', 'undead', 'daemon'];
 const user = generateTeam(userTeam, 1, 2);
 const enemy = generateTeam(enemyTeam, 1, 2);
+const getUserPos = () => {
+  const random = Math.floor(Math.random() * userPos.length);
+  const result = userPos[random];
+  return result;
+};
+const getEnemyPos = () => {
+  const random = Math.floor(Math.random() * enemyPos.length);
+  const result = enemyPos[random];
+  return result;
+};
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -31,7 +41,6 @@ export default class GameController {
     // TODO: add event listeners to gamePlay events
     // TODO: load saved stated from stateService
     this.newGame();
-    this.gamePlay.drawUi(themes.prairie);
     this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
     this.gamePlay.redrawPositions(this.positions);
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
@@ -43,31 +52,20 @@ export default class GameController {
     if (this.level === 1) {
     this.initUserTeam();
     this.initEnemyTeam();
+    this.gamePlay.drawUi(themes.prairie);
   }
 }
  
   initUserTeam() {
-    const getUserPos = () => {
-      const random = Math.floor(Math.random() * userPos.length);
-      const result = userPos[random];
-      return result;
-    };
-
     user.forEach((character) => {
       const positionedCharacter = new PositionedCharacter(character, getUserPos());
       this.userPositionedTeam.push(positionedCharacter);
     });
     
-    return this.userPositionedTeam;
-    
+    return this.userPositionedTeam; 
   }
 
-  initEnemyTeam() {
-    const getEnemyPos = () => {
-      const random = Math.floor(Math.random() * enemyPos.length);
-      const result = enemyPos[random];
-      return result;
-    };
+  initEnemyTeam() {    
     enemy.forEach((character) => {
       const positionedCharacter = new PositionedCharacter(character, getEnemyPos());
       this.enemyPositionedTeam.push(positionedCharacter);
@@ -76,13 +74,14 @@ export default class GameController {
   }
 
   attack(index, attacker, target) {
-    const damage = Math.max(attacker.attack - target.defence, attacker.attack * 0.1);
+    const damage = 10;
+    //const damage = Math.max(attacker.attack - target.defence, attacker.attack * 0.1);
     if (this.turn === undefined) {
       throw new TypeError('Что-то пошло не так');
     }
     target.health -= damage;
     if (target.health - damage <= 0) {
-      //Надо убрать желтый кружок, но селектеда нет
+      this.gamePlay.deselectCell(index);
       console.log('killed');
       this.enemyPositionedTeam = this.enemyPositionedTeam.filter(item => item.position !== index);
       this.userPositionedTeam = this.userPositionedTeam.filter(item => item.position !== index);
@@ -93,8 +92,9 @@ export default class GameController {
       } else if (this.enemyPositionedTeam.length === 0) {
         // Если 4 уровень, то алерт победа и заблокировать
         alert('Переход на следующий уровень');
+        this.selected = '';
         this.alive = this.userPositionedTeam.length;
-        console.log(this.userPositionedTeam);
+        console.log(this.userPositionedTeam, this.alive);
         this.levelUp();
       }
     }
@@ -121,6 +121,7 @@ export default class GameController {
           const attackCell = this.enemyAttackIndex[attackCellKey];
           this.attack(attackCell, getEnemyChar().character, userPos.character);
           this.turn = 'user';
+          return;
         } else {
           //хорошо бы еще убрать отсюда позиции персов игрока
       this.newPos = allowedMove(getEnemyChar().position, getEnemyChar().character.distance);
@@ -133,6 +134,7 @@ export default class GameController {
       this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
       this.gamePlay.redrawPositions(this.positions);
       this.turn = 'user';
+      return;
       } 
     }
     }   
@@ -162,25 +164,33 @@ export default class GameController {
     }
 
     let theme;
-    if (this.level === 1) { theme = themes.prairie;}
-    if (this.level === 2) { theme = themes.desert;}
-    if (this.level === 3) { theme = themes.arctic;}
-    if (this.level === 4) { theme = themes.mountain;}
+    let n;
+    if (this.level === 1) { theme = themes.prairie; n = 2;}
+    if (this.level === 2) { theme = themes.desert; n = 1;}
+    if (this.level === 3) { theme = themes.arctic; n = 2;}
+    if (this.level === 4) { theme = themes.mountain; n = 2;}
 
     this.gamePlay.drawUi(theme);
     
     this.levelUpChar(this.userPositionedTeam);
 
-    const nEnemy = this.userPositionedTeam.length + 1;
-    const user = generateTeam(userTeam, this.level, 1);
-    const enemy = generateTeam(enemyTeam, this.level, nEnemy);
+    const newUserTeam = generateTeam(userTeam, this.level - 1, n);
+    const newEnemyTeam = generateTeam(enemyTeam, this.level - 1, n + this.alive);
+    
+    newUserTeam.forEach((character) => {
+      const positionedCharacter = new PositionedCharacter(character, getUserPos());
+      this.userPositionedTeam.push(positionedCharacter);
+    });
 
-    this.initUserTeam();
-    this.initEnemyTeam();
+   newEnemyTeam.forEach((character) => {
+      const positionedCharacter = new PositionedCharacter(character, getEnemyPos());
+      this.enemyPositionedTeam.push(positionedCharacter);
+    });
+
+    console.log(this.userPositionedTeam, this.enemyPositionedTeam);
 
     this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
     this.gamePlay.redrawPositions(this.positions);
-    console.log(this.userPositionedTeam, this.enemyPositionedTeam);
   }
 
   onCellClick(index) {
