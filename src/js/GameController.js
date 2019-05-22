@@ -91,10 +91,11 @@ export default class GameController {
         alert('Game over');
       } else if (this.enemyPositionedTeam.length === 0) {
         // Если 4 уровень, то алерт победа и заблокировать
-        alert('Переход на следующий уровень');
         this.selected = '';
+        // Здесь надо очки посчитать
         this.alive = this.userPositionedTeam.length;
-        console.log(this.userPositionedTeam, this.alive);
+        console.log(this.userPositionedTeam, this.alive);// Почему здесь выдается уже левелапнутая команда с дополнительными персонажами?
+        alert('Переход на следующий уровень');
         this.levelUp();
       }
     }
