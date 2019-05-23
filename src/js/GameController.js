@@ -1,5 +1,6 @@
 import themes from './themes';
 import GamePlay from './GamePlay';
+import GameState from './GameState';
 import PositionedCharacter from './PositionedCharacter';
 import { generateTeam, characterGenerator } from './generators';
 // import Team from './Team';
@@ -35,37 +36,61 @@ export default class GameController {
     this.alive = 2;
     this.userPositionedTeam = [];
     this.enemyPositionedTeam = [];
+    this.score = 0;
+    this.lock = false;
   }
 
   init() {
     // TODO: add event listeners to gamePlay events
     // TODO: load saved stated from stateService
-    this.newGame();
-    this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
-    this.gamePlay.redrawPositions(this.positions);
-    this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
-    this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
-    this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+    if (!this.lock) {
+      this.onNewGame();
+      this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
+      this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
+      this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+      this.gamePlay.addNewGameListener(this.onNewGame.bind(this));
+    // this.gamePlay.addLoadGameListener(this.onLoadGame.bind(this));
+    // this.gamePlay.addSaveGameListener(this.onSaveGame.bind(this));
+    }
   }
 
-  newGame(){
-    if (this.level === 1) {
+  onNewGame() {
+    // Здесь надо сделать delete персов из команд
+    if (this.userPositionedTeam.length) {
+      this.userPositionedTeam.forEach((item) => {
+        item.character.health = 50;
+      });
+    }
+    if (this.enemyPositionedTeam.length) {
+      this.enemyPositionedTeam.forEach((item) => {
+        item.character.health = 50;
+      });
+    }
+    this.level = 1;
+    this.turn = 'user';
+    this.selected = '';
+    this.alive = 2;
+    this.userPositionedTeam = [];
+    this.enemyPositionedTeam = [];
+    this.score = 0;
+    this.lock = false;
     this.initUserTeam();
     this.initEnemyTeam();
     this.gamePlay.drawUi(themes.prairie);
+    this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
+    this.gamePlay.redrawPositions(this.positions);
   }
-}
- 
+
   initUserTeam() {
     user.forEach((character) => {
       const positionedCharacter = new PositionedCharacter(character, getUserPos());
       this.userPositionedTeam.push(positionedCharacter);
     });
-    
-    return this.userPositionedTeam; 
+
+    return this.userPositionedTeam;
   }
 
-  initEnemyTeam() {    
+  initEnemyTeam() {
     enemy.forEach((character) => {
       const positionedCharacter = new PositionedCharacter(character, getEnemyPos());
       this.enemyPositionedTeam.push(positionedCharacter);
@@ -75,7 +100,7 @@ export default class GameController {
 
   attack(index, attacker, target) {
     const damage = 10;
-    //const damage = Math.max(attacker.attack - target.defence, attacker.attack * 0.1);
+    // const damage = Math.max(attacker.attack - target.defence, attacker.attack * 0.1);
     if (this.turn === undefined) {
       throw new TypeError('Что-то пошло не так');
     }
@@ -91,10 +116,13 @@ export default class GameController {
         alert('Game over');
       } else if (this.enemyPositionedTeam.length === 0) {
         // Если 4 уровень, то алерт победа и заблокировать
-        alert('Переход на следующий уровень');
         this.selected = '';
+        this.userPositionedTeam.forEach((item) => {
+          this.score += item.character.health;
+        });
         this.alive = this.userPositionedTeam.length;
-        console.log(this.userPositionedTeam, this.alive);
+        console.log(this.userPositionedTeam, this.score); // Почему он выдает уже левелапнутый массив команды?
+        alert('Переход на следующий уровень');
         this.levelUp();
       }
     }
@@ -122,22 +150,21 @@ export default class GameController {
           this.attack(attackCell, getEnemyChar().character, userPos.character);
           this.turn = 'user';
           return;
-        } else {
-          //хорошо бы еще убрать отсюда позиции персов игрока
-      this.newPos = allowedMove(getEnemyChar().position, getEnemyChar().character.distance);
-      const getEnemyPos = () => {
-        const random = Math.floor(Math.random() * this.newPos.length);
-        const result = this.newPos[random];
-        return result;
-      };
-      getEnemyChar().position = getEnemyPos();
-      this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
-      this.gamePlay.redrawPositions(this.positions);
-      this.turn = 'user';
-      return;
-      } 
+        }
+        // хорошо бы еще убрать отсюда позиции персов игрока
+        this.newPos = allowedMove(getEnemyChar().position, getEnemyChar().character.distance);
+        const getEnemyPos = () => {
+          const random = Math.floor(Math.random() * this.newPos.length);
+          const result = this.newPos[random];
+          return result;
+        };
+        getEnemyChar().position = getEnemyPos();
+        this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
+        this.gamePlay.redrawPositions(this.positions);
+        this.turn = 'user';
+        return;
+      }
     }
-    }   
   }
 
   levelUpChar(arr) {
@@ -160,29 +187,31 @@ export default class GameController {
   levelUp() {
     this.level += 1;
     if (this.level > 4) {
+      alert('Ура, вы победили!');
       this.level = 1;
+      this.lock = true;
     }
 
     let theme;
     let n;
-    if (this.level === 1) { theme = themes.prairie; n = 2;}
-    if (this.level === 2) { theme = themes.desert; n = 1;}
-    if (this.level === 3) { theme = themes.arctic; n = 2;}
-    if (this.level === 4) { theme = themes.mountain; n = 2;}
+    if (this.level === 1) { theme = themes.prairie; n = 2; }
+    if (this.level === 2) { theme = themes.desert; n = 1; }
+    if (this.level === 3) { theme = themes.arctic; n = 2; }
+    if (this.level === 4) { theme = themes.mountain; n = 2; }
 
     this.gamePlay.drawUi(theme);
-    
+
     this.levelUpChar(this.userPositionedTeam);
 
     const newUserTeam = generateTeam(userTeam, this.level - 1, n);
-    const newEnemyTeam = generateTeam(enemyTeam, this.level - 1, n + this.alive);
-    
+    const newEnemyTeam = generateTeam(enemyTeam, this.level, n + this.alive);
+
     newUserTeam.forEach((character) => {
       const positionedCharacter = new PositionedCharacter(character, getUserPos());
       this.userPositionedTeam.push(positionedCharacter);
     });
 
-   newEnemyTeam.forEach((character) => {
+    newEnemyTeam.forEach((character) => {
       const positionedCharacter = new PositionedCharacter(character, getEnemyPos());
       this.enemyPositionedTeam.push(positionedCharacter);
     });

@@ -29,7 +29,7 @@ export function unique(arg) {
   for (let i = 0; i < arg.length; i += 1) {
     obj[arg[i]] = arg[i];
   }
-  for (let i in obj) {
+  for (const i in obj) {
     result.push(obj[i]);
   }
   return result;
