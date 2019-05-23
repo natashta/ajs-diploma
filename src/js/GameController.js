@@ -117,11 +117,17 @@ export default class GameController {
       } else if (this.enemyPositionedTeam.length === 0) {
         // Если 4 уровень, то алерт победа и заблокировать
         this.selected = '';
+<<<<<<< HEAD
         this.userPositionedTeam.forEach((item) => {
           this.score += item.character.health;
         });
         this.alive = this.userPositionedTeam.length;
         console.log(this.userPositionedTeam, this.score); // Почему он выдает уже левелапнутый массив команды?
+=======
+        // Здесь надо очки посчитать
+        this.alive = this.userPositionedTeam.length;
+        console.log(this.userPositionedTeam, this.alive);// Почему здесь выдается уже левелапнутая команда с дополнительными персонажами?
+>>>>>>> refs/remotes/origin/master
         alert('Переход на следующий уровень');
         this.levelUp();
       }
