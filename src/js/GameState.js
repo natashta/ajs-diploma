@@ -5,10 +5,8 @@ export default class GameState {
       return {
         userPos: object.userPositionedTeam,
         enemyPos: object.enemyPositionedTeam,
-        allPos: object.positions,
         selected: object.selected,
-        selectChar: object.selected,
-        tur: object.turn,
+        turn: object.turn,
         level: object.level,
         score: object.score,
       };

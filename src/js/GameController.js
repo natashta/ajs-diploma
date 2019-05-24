@@ -43,29 +43,19 @@ export default class GameController {
   init() {
     // TODO: add event listeners to gamePlay events
     // TODO: load saved stated from stateService
+    this.gamePlay.drawUi(themes.prairie);
     if (!this.lock) {
       this.onNewGame();
       this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
       this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
       this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
       this.gamePlay.addNewGameListener(this.onNewGame.bind(this));
-    // this.gamePlay.addLoadGameListener(this.onLoadGame.bind(this));
-    // this.gamePlay.addSaveGameListener(this.onSaveGame.bind(this));
+      this.gamePlay.addLoadGameListener(this.onLoadGame.bind(this));
+      this.gamePlay.addSaveGameListener(this.onSaveGame.bind(this));
     }
   }
 
   onNewGame() {
-    // Здесь надо сделать delete персов из команд
-    if (this.userPositionedTeam.length) {
-      this.userPositionedTeam.forEach((item) => {
-        item.character.health = 50;
-      });
-    }
-    if (this.enemyPositionedTeam.length) {
-      this.enemyPositionedTeam.forEach((item) => {
-        item.character.health = 50;
-      });
-    }
     this.level = 1;
     this.turn = 'user';
     this.selected = '';
@@ -77,9 +67,58 @@ export default class GameController {
     this.initUserTeam();
     this.initEnemyTeam();
     this.gamePlay.drawUi(themes.prairie);
+    // Здесь надо сделать delete персов из команд
+    if (this.userPositionedTeam.length) {
+      this.userPositionedTeam.forEach((item) => {
+        item.character.health = 50;
+      });
+    }
+    if (this.enemyPositionedTeam.length) {
+      this.enemyPositionedTeam.forEach((item) => {
+        item.character.health = 50;
+      });
+    }
     this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
     this.gamePlay.redrawPositions(this.positions);
   }
+
+  onSaveGame() {
+    const status = {
+      level: this.level, 
+      turn: this.turn,
+      selected: this.selected,
+      userPos: this.userPositionedTeam,
+      enemyPos: this.enemyPositionedTeam,
+      score: this.score,
+    }
+    this.stateService.save(GameState.from(status));
+    console.log('game saved', status);
+  }
+
+onLoadGame() {
+  const load = this.stateService.load();
+  if (load) {
+    this.level = load.level;
+    this.turn = load.turn;
+    this.themes = load.themes;
+    this.score = load.score;
+    this.selected = load.selected;
+    this.userPositionedTeam = load.userPos;
+    this.enemyPositionedTeam = load.enemyPos;
+  }
+  let theme;
+    if (this.level === 1) { theme = themes.prairie; }
+    if (this.level === 2) { theme = themes.desert; }
+    if (this.level === 3) { theme = themes.arctic; }
+    if (this.level === 4) { theme = themes.mountain; }
+
+  this.gamePlay.drawUi(theme);
+  console.log(load);
+  //this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
+  //this.gamePlay.redrawPositions(this.positions);
+  this.gamePlay.selectCell(this.selected.position);
+  if (this.state = 'enemy') {this.enemyAction();}
+}
 
   initUserTeam() {
     user.forEach((character) => {
@@ -113,9 +152,9 @@ export default class GameController {
       this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
       this.gamePlay.redrawPositions(this.positions);
       if (this.userPositionedTeam.length === 0) {
+        this.lock = true;
         alert('Game over');
       } else if (this.enemyPositionedTeam.length === 0) {
-        // Если 4 уровень, то алерт победа и заблокировать
         this.selected = '';
         this.userPositionedTeam.forEach((item) => {
           this.score += item.character.health;
@@ -123,7 +162,7 @@ export default class GameController {
         this.alive = this.userPositionedTeam.length;
         console.log(this.userPositionedTeam, this.score); // Почему он выдает уже левелапнутый массив команды?
 
-        alert('Переход на следующий уровень');
+        alert((this.level+1) + ' уровень. Вы набрали ' + this.score + ' очков ');
         this.levelUp();
       }
     }
@@ -189,7 +228,7 @@ export default class GameController {
     this.level += 1;
     if (this.level > 4) {
       alert('Ура, вы победили!');
-      this.level = 1;
+      this.level = 4;
       this.lock = true;
     }
 
@@ -225,6 +264,7 @@ export default class GameController {
 
   onCellClick(index) {
     // TODO: react to click
+    if (this.lock) this.init();
     const selectedHero = this.positions.filter(i => i.position === index);
     if (selectedHero[0] !== undefined && userTypes.includes(selectedHero[0].character.type)) {
       if (this.selected) {
@@ -259,6 +299,7 @@ export default class GameController {
 
   onCellEnter(index) {
     // TODO: react to mouse enter
+    if (this.lock) this.init();
     const selectedHero = this.positions.filter(i => i.position === index);
     if (selectedHero[0] !== undefined) {
       const shortInfo = heroInfo(selectedHero[0].character);
