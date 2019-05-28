@@ -81,7 +81,18 @@ export default class GameController {
     this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
     this.gamePlay.redrawPositions(this.positions);
   }
-
+/*
+  state() {
+    return GameState.from({
+      level: this.level, 
+      turn: this.turn,
+      selected: this.selected,
+      userPos: this.userPositionedTeam,
+      enemyPos: this.enemyPositionedTeam,
+      score: this.score,
+    })
+  }
+*/
   onSaveGame() {
     const status = {
       level: this.level, 
@@ -92,7 +103,7 @@ export default class GameController {
       score: this.score,
     }
     this.stateService.save(GameState.from(status));
-    console.log('game saved', status);
+    console.log('game saved');
   }
 
 onLoadGame() {
@@ -113,17 +124,16 @@ onLoadGame() {
     if (this.level === 4) { theme = themes.mountain; }
 
   this.gamePlay.drawUi(theme);
-  console.log(load);
-  //this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
-  //this.gamePlay.redrawPositions(this.positions);
+  this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
+  this.gamePlay.redrawPositions(this.positions);
   this.gamePlay.selectCell(this.selected.position);
-  if (this.state = 'enemy') {this.enemyAction();}
+  if (this.turn = 'enemy') {this.enemyAction();}
 }
 
   initUserTeam() {
     user.forEach((character) => {
       const positionedCharacter = new PositionedCharacter(character, getUserPos());
-      this.userPositionedTeam.push(positionedCharacter);
+      this.userPositionedTeam = this.userPositionedTeam.concat(positionedCharacter);
     });
 
     return this.userPositionedTeam;
@@ -132,7 +142,7 @@ onLoadGame() {
   initEnemyTeam() {
     enemy.forEach((character) => {
       const positionedCharacter = new PositionedCharacter(character, getEnemyPos());
-      this.enemyPositionedTeam.push(positionedCharacter);
+      this.enemyPositionedTeam = this.enemyPositionedTeam.concat(positionedCharacter);
     });
     return this.enemyPositionedTeam;
   }
