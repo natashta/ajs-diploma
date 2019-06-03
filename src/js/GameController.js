@@ -67,7 +67,7 @@ export default class GameController {
     this.initUserTeam();
     this.initEnemyTeam();
     this.gamePlay.drawUi(themes.prairie);
-    // Здесь надо сделать delete персов из команд
+    // Здесь лучше сделать delete персов из команд
     if (this.userPositionedTeam.length) {
       this.userPositionedTeam.forEach((item) => {
         item.character.health = 50;
@@ -81,54 +81,42 @@ export default class GameController {
     this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
     this.gamePlay.redrawPositions(this.positions);
   }
-/*
-  state() {
-    return GameState.from({
-      level: this.level, 
-      turn: this.turn,
-      selected: this.selected,
-      userPos: this.userPositionedTeam,
-      enemyPos: this.enemyPositionedTeam,
-      score: this.score,
-    })
-  }
-*/
+
   onSaveGame() {
     const status = {
-      level: this.level, 
+      level: this.level,
       turn: this.turn,
       selected: this.selected,
       userPos: this.userPositionedTeam,
       enemyPos: this.enemyPositionedTeam,
       score: this.score,
-    }
+    };
     this.stateService.save(GameState.from(status));
     console.log('game saved');
   }
 
-onLoadGame() {
-  const load = this.stateService.load();
-  if (load) {
-    this.level = load.level;
-    this.turn = load.turn;
-    this.themes = load.themes;
-    this.score = load.score;
-    this.selected = load.selected;
-    this.userPositionedTeam = load.userPos;
-    this.enemyPositionedTeam = load.enemyPos;
-  }
-  let theme;
+  onLoadGame() {
+    const load = this.stateService.load();
+    if (load) {
+      this.level = load.level;
+      this.turn = load.turn;
+      this.themes = load.themes;
+      this.score = load.score;
+      this.selected = load.selected;
+      this.userPositionedTeam = load.userPos;
+      this.enemyPositionedTeam = load.enemyPos;
+    }
+    let theme;
     if (this.level === 1) { theme = themes.prairie; }
     if (this.level === 2) { theme = themes.desert; }
     if (this.level === 3) { theme = themes.arctic; }
     if (this.level === 4) { theme = themes.mountain; }
-
-  this.gamePlay.drawUi(theme);
-  this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
-  this.gamePlay.redrawPositions(this.positions);
-  this.gamePlay.selectCell(this.selected.position);
-  if (this.turn = 'enemy') {this.enemyAction();}
-}
+    this.gamePlay.drawUi(theme);
+    this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
+    this.gamePlay.redrawPositions(this.positions);
+    this.gamePlay.selectCell(this.selected.position);
+    if (this.turn === 'enemy') { this.enemyAction(); }
+  }
 
   initUserTeam() {
     user.forEach((character) => {
@@ -148,8 +136,8 @@ onLoadGame() {
   }
 
   attack(index, attacker, target) {
-    const damage = 10;
-    // const damage = Math.max(attacker.attack - target.defence, attacker.attack * 0.1);
+    // const damage = 10;
+    const damage = Math.max(attacker.attack - target.defence, attacker.attack * 0.1);
     if (this.turn === undefined) {
       throw new TypeError('Что-то пошло не так');
     }
@@ -170,9 +158,9 @@ onLoadGame() {
           this.score += item.character.health;
         });
         this.alive = this.userPositionedTeam.length;
-        console.log(this.userPositionedTeam, this.score); // Почему он выдает уже левелапнутый массив команды?
+        // console.log(this.userPositionedTeam, this.score);
 
-        alert((this.level+1) + ' уровень. Вы набрали ' + this.score + ' очков ');
+        alert(`${this.level + 1} уровень. Вы набрали ${this.score} очков `);
         this.levelUp();
       }
     }
@@ -252,6 +240,10 @@ onLoadGame() {
     this.gamePlay.drawUi(theme);
 
     this.levelUpChar(this.userPositionedTeam);
+
+    /* const randomLevel = () => {
+      return Math.floor(Math.random() * (this.level - 1 + 1)) + 1;
+    }; */
 
     const newUserTeam = generateTeam(userTeam, this.level - 1, n);
     const newEnemyTeam = generateTeam(enemyTeam, this.level, n + this.alive);
@@ -335,7 +327,7 @@ onLoadGame() {
 
   onCellLeave(index) {
     // TODO: react to mouse leave
-    if (this.selected.position != index) {
+    if (this.selected.position !== index) {
       this.gamePlay.deselectCell(index);
     }
     this.gamePlay.setCursor(cursors.auto);

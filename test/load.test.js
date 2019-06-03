@@ -5,33 +5,35 @@ import GameStateService from '../src/js/GameStateService.js';
 
 const gamePlay = new GamePlay();
 const stateService = new GameStateService(localStorage);
-const GameController = new GameController(gamePlay, stateService);
+const gameController = new GameController(gamePlay, stateService);
 
 jest.mock('../src/js/GameController.js');
-const status = {
-    level: 1, 
-    turn: 'user',
-    user: {attack: 10, defence: 40, distance: 1, health: 50},
-    score: 30,
-}
+const state = {
+  level: 1,
+  turn: 'user',
+  user: {
+    attack: 10, defence: 40, distance: 1, health: 50,
+  },
+  score: 30,
+};
 
 beforeEach(() => {
   jest.resetAllMocks();
 });
 
 test('load data', () => {
-    GameController.onLoadGame().mockReturnValue(status);
-    const expected = '{"level": 1, "turn": "user", "user": {"attack": 10, "defence": 40, "distance": 1, "health": 50}, "score": 30}';
+  gameController.onLoadGame().mockReturnValue(state);
+  const expected = '{"level": 1, "turn": "user", "user": {"attack": 10, "defence": 40, "distance": 1, "health": 50}, "score": 30}';
 
-    gameCtrl.onLoadGame().then((res) => {
+  gameController.onLoadGame().then((res) => {
     expect(res).toEqual(expected);
   });
 });
 
 test('load error', () => {
-  GameController.onLoadGame().mockRejectedValue('Invalid state');
+  gameController.onLoadGame().mockRejectedValue('Invalid state');
 
-  gameCtrl.onLoadGame().catch((err) => {
-  expect(err).toThrow();
+  gameController.onLoadGame().catch((err) => {
+    expect(err).toThrow();
   });
 });

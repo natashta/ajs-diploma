@@ -1,17 +1,3 @@
-
-/*
-    const boardSize = GamePlay.boardSize;
-    const indexLength = boardSize ** 2;
-   // const position = Math.floor(Math.random() * indexLength); //позиция персонажа
-
-    const idxStr = Math.floor(position / boardSize);
-    const idxCol = position % boardSize;
-    return [idxStr, idxCol];
-    //index = idxStr * boardSize + idxCol;
-
-}
-*/
-
 export function allowedAttack(position, distance) {
   const allBoard = [];
   let arrStr = [];

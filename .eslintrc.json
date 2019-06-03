@@ -26,6 +26,9 @@
         "max-len": ["error", { 
             "code": 160 
             }],
+        "no-param-reassign": ["error", 
+            { "props": true, 
+              "ignorePropertyModificationsFor": ["item", "target"] }],
         "import/extensions": [
             "error",
             "ignorePackages"
