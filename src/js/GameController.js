@@ -12,7 +12,7 @@ import { allowedMove, allowedAttack } from './chooseIndex';
 const userPos = [0, 1, 8, 9, 16, 17, 24, 25, 32, 33, 40, 41, 48, 49, 56, 57];
 const enemyPos = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55, 62, 63];
 const userTypes = ['swordsman', 'bowman', 'magician'];
-const enemyTypes = ['vampire', 'undead', 'daemon'];
+const enemyTypes = ['daemon', 'undead', 'vampire'];
 const user = generateTeam(userTeam, 1, 2);
 const enemy = generateTeam(enemyTeam, 1, 2);
 const getUserPos = () => {
@@ -158,7 +158,6 @@ export default class GameController {
           this.score += item.character.health;
         });
         this.alive = this.userPositionedTeam.length;
-        // console.log(this.userPositionedTeam, this.score);
 
         alert(`${this.level + 1} уровень. Вы набрали ${this.score} очков `);
         this.levelUp();
@@ -241,10 +240,6 @@ export default class GameController {
 
     this.levelUpChar(this.userPositionedTeam);
 
-    /* const randomLevel = () => {
-      return Math.floor(Math.random() * (this.level - 1 + 1)) + 1;
-    }; */
-
     const newUserTeam = generateTeam(userTeam, this.level - 1, n);
     const newEnemyTeam = generateTeam(enemyTeam, this.level, n + this.alive);
 
@@ -280,6 +275,7 @@ export default class GameController {
       if (this.attackIndex.includes(index) && selectedHero.length && enemyTypes.includes(selectedHero[0].character.type)) {
         const target = this.enemyPositionedTeam.filter(item => item.position === index);
         this.attack(index, this.selected.character, target[0].character);
+        this.gamePlay.deselectCell(this.selected.position);
         this.turn = 'enemy';
         this.enemyAction();
       } else if (this.moveIndex.includes(index)) {

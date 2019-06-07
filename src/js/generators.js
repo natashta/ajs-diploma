@@ -7,8 +7,10 @@
  */
 export function* characterGenerator(allowedTypes, maxLevel) {
   // TODO: write logic here
-  for (const heroClass of allowedTypes) {
-    yield new heroClass(maxLevel);
+  while (true) {
+    const idx = Math.floor(Math.random() * allowedTypes.length);
+    const level = Math.floor(Math.random() * maxLevel) + 1;
+    yield new allowedTypes[idx](level);
   }
 }
 
