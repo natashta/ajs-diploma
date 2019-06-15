@@ -2,8 +2,7 @@ import themes from './themes';
 import GamePlay from './GamePlay';
 import GameState from './GameState';
 import PositionedCharacter from './PositionedCharacter';
-import { generateTeam, characterGenerator } from './generators';
-// import Team from './Team';
+import { generateTeam } from './generators';
 import { userTeam, enemyTeam } from './classes/arrClasses';
 import heroInfo from './classes/shortHeroInfo';
 import cursors from './cursors';
@@ -15,16 +14,36 @@ const userTypes = ['swordsman', 'bowman', 'magician'];
 const enemyTypes = ['daemon', 'undead', 'vampire'];
 const user = generateTeam(userTeam, 1, 2);
 const enemy = generateTeam(enemyTeam, 1, 2);
-const getUserPos = () => {
+/* const getUserPos = () => {
   const random = Math.floor(Math.random() * userPos.length);
   const result = userPos[random];
   return result;
 };
-const getEnemyPos = () => {
+
+  const getEnemyPos = () => {
   const random = Math.floor(Math.random() * enemyPos.length);
   const result = enemyPos[random];
   return result;
-};
+}; */
+function getUserPos(max, arr) {
+  while (arr.length <= max) {
+    const random = Math.floor(Math.random() * userPos.length);
+    const result = userPos[random];
+    if (!arr.includes(result)) {
+      return result;
+    }
+  }
+}
+
+function getEnemyPos(max, arr) {
+  while (arr.length <= max) {
+    const random = Math.floor(Math.random() * enemyPos.length);
+    const result = enemyPos[random];
+    if (!arr.includes(result)) {
+      return result;
+    }
+  }
+}
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -67,7 +86,6 @@ export default class GameController {
     this.initUserTeam();
     this.initEnemyTeam();
     this.gamePlay.drawUi(themes.prairie);
-    // Здесь лучше сделать delete персов из команд
     if (this.userPositionedTeam.length) {
       this.userPositionedTeam.forEach((item) => {
         item.character.health = 50;
@@ -120,23 +138,25 @@ export default class GameController {
 
   initUserTeam() {
     user.forEach((character) => {
-      const positionedCharacter = new PositionedCharacter(character, getUserPos());
+      const checkArr = this.userPositionedTeam.map(item => item.position);
+      const idx = getUserPos(user.length, checkArr);
+      const positionedCharacter = new PositionedCharacter(character, idx);
       this.userPositionedTeam = this.userPositionedTeam.concat(positionedCharacter);
     });
-
     return this.userPositionedTeam;
   }
 
   initEnemyTeam() {
     enemy.forEach((character) => {
-      const positionedCharacter = new PositionedCharacter(character, getEnemyPos());
+      const checkArr = this.enemyPositionedTeam.map(item => item.position);
+      const idx = getEnemyPos(enemy.length, checkArr);
+      const positionedCharacter = new PositionedCharacter(character, idx);
       this.enemyPositionedTeam = this.enemyPositionedTeam.concat(positionedCharacter);
     });
     return this.enemyPositionedTeam;
   }
 
   attack(index, attacker, target) {
-    // const damage = 10;
     const damage = Math.max(attacker.attack - target.defence, attacker.attack * 0.1);
     if (this.turn === undefined) {
       throw new TypeError('Что-то пошло не так');
@@ -180,22 +200,24 @@ export default class GameController {
       this.enemyAttackIndex = allowedAttack(getEnemyChar().position, getEnemyChar().character.distanceAttack);
       this.enemyMoveIndex = allowedMove(getEnemyChar().position, getEnemyChar().character.distance);
       // если в массиве атаки есть индекс команды игрока, то напасть
-      for (const userPos of this.userPositionedTeam) {
-        const attackCellKey = this.enemyAttackIndex.indexOf(userPos.position);
+      for (const userPosition of this.userPositionedTeam) {
+        const attackCellKey = this.enemyAttackIndex.indexOf(userPosition.position);
         if (attackCellKey !== -1) {
           const attackCell = this.enemyAttackIndex[attackCellKey];
-          this.attack(attackCell, getEnemyChar().character, userPos.character);
+          this.attack(attackCell, getEnemyChar().character, userPosition.character);
           this.turn = 'user';
           return;
         }
-        // хорошо бы еще убрать отсюда позиции персов игрока
         this.newPos = allowedMove(getEnemyChar().position, getEnemyChar().character.distance);
-        const getEnemyPos = () => {
-          const random = Math.floor(Math.random() * this.newPos.length);
-          const result = this.newPos[random];
+        this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
+        const busyIndexes = this.positions.map(item => item.position);
+        const vacantIndexes = this.newPos.filter(item => busyIndexes.indexOf(item) === -1);
+        const getEnemyPosition = () => {
+          const random = Math.floor(Math.random() * vacantIndexes.length);
+          const result = vacantIndexes[random];
           return result;
         };
-        getEnemyChar().position = getEnemyPos();
+        getEnemyChar().position = getEnemyPosition();
         this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
         this.gamePlay.redrawPositions(this.positions);
         this.turn = 'user';
@@ -252,8 +274,6 @@ export default class GameController {
       const positionedCharacter = new PositionedCharacter(character, getEnemyPos());
       this.enemyPositionedTeam.push(positionedCharacter);
     });
-
-    console.log(this.userPositionedTeam, this.enemyPositionedTeam);
 
     this.positions = this.userPositionedTeam.concat(this.enemyPositionedTeam);
     this.gamePlay.redrawPositions(this.positions);

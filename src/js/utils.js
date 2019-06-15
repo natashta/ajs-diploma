@@ -30,7 +30,9 @@ export function unique(arg) {
     obj[arg[i]] = arg[i];
   }
   for (const i in obj) {
-    result.push(obj[i]);
+    if (Object.prototype.hasOwnProperty.call(obj, i)) {
+      result.push(obj[i]);
+    }
   }
   return result;
 }

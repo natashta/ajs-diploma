@@ -1,0 +1,10 @@
+ initUserTeam() {
+    user.forEach((character) => {
+      const positionedCharacter = new PositionedCharacter(character, getUserPos());
+      while (this.userPositionedTeam.length <= user.length) {
+        const indexes = this.userPositionedTeam.map(item => item.position);
+        if (indexes.indexOf(positionedCharacter.position) == -1) {        
+          this.userPositionedTeam = this.userPositionedTeam.concat(positionedCharacter);         
+        }
+     }
+    });
